@@ -1,4 +1,4 @@
-image_filter
+image-filter
 ============
 
 Image Processing with PIL (Pillow) and cImage
@@ -21,14 +21,3 @@ Image Processing with PIL (Pillow) and cImage
     double - Doubles the size of the image.
     average - Smoothes out the image by averaging the 8 neighbors of a pixel.
     median - Same thing as average but using a median. Likely gives better results.
-    
-    TODO:
-    1. Use colorsys to add HLS, HSV, YIQ compatibility and customization (satu-
-    ration, intensity, lightness)
-    2. Write testcases
-    3. Add file type conversion
-    4. Add command line arguments
-    5. Add resizing and thumbnail methods
-    6. Use gaussian kernel for average() instead of averaging.
-        Also source out the neighborhood stuff to a separate method.
-    7. Make the write method optional.

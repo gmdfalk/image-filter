@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+
 """ Image Filter: Image Processing with PIL and cImage
 
     Originated from assignments in interactivepython.org (Iteration Chapter).
@@ -15,6 +16,9 @@
     double - Doubles the size of the image.
     average - Smoothes out the image by averaging the 8 neighbors of a pixel.
     median - Same thing as average but using a median. Likely gives better results.
+
+    Please note that this was a learning exercise. Do not use these filters with
+    large images as the processing time is O(n) or worse.
     
     TODO:
     1. Use colorsys to add HLS, HSV, YIQ compatibility and customization (satu-
@@ -25,6 +29,9 @@
     5. Add resizing and thumbnail methods
     6. Use gaussian kernel for average() instead of averaging.
         Also source out the neighborhood stuff to a separate method.
+    7. Make the write method optional.
+    8. Fix image drawing for double sized pictures.
+    9. Implement the skip_draw argument properly (per method, not instance).
 """
 
 
@@ -33,22 +40,24 @@ from os.path import splitext
 
 class ImageFilter(object):
 
-    def __init__(self, img_file):
+    def __init__(self, img_file, draw=1):
         "Initialize image, clone it, get its size and create a canvas"
         self.img_file = img_file
         self.oldimg = image.Image(self.img_file)
-        self.newimg = self.oldimg.copy()
         self.width = self.oldimg.getWidth()
         self.height = self.oldimg.getHeight()
-        self.win = image.ImageWin(self.img_file, self.width, self.height)
+        self.newimg = self.oldimg.copy()
+        self.draw = draw
+        if self.draw:
+            self.win = image.ImageWin(self.img_file, self.width, self.height)
 
-    def write(self, func_name="_"):
+    def write(self, func_name="_", draw=1):
         "Draw and save a processed image"
-        # This order will only save if the window gets clicked on.
-        self.newimg.draw(self.win)
-        self.win.exitonclick()
         img_name, img_ext = self.strip_name()
         self.newimg.save(img_name+func_name+img_ext)
+        if self.draw:
+            self.newimg.draw(self.win)
+            self.win.exitonclick()
 
     def strip_name(self):
         "Strips the name of a file into (pathname, extension)"
@@ -113,10 +122,12 @@ class ImageFilter(object):
                     continue
         self.write("_sepia")
 
-    def double(self):
+    def double(self, draw=0):
         "Double the size of the image"
+        self.draw = draw
         self.newimg = image.EmptyImage(self.width*2, self.height*2)
-        self.win = image.ImageWin(self.img_file, self.width*2, self.height*2)
+        if self.draw:
+            self.win = image.ImageWin(self.img_file, self.width*2, self.height*2)
     
         for row in range(self.height):
             for col in range(self.width):    
@@ -125,7 +136,7 @@ class ImageFilter(object):
                 self.newimg.setPixel(2*col+1, 2*row, self.oldpixel)
                 self.newimg.setPixel(2*col, 2*row+1, self.oldpixel)
                 self.newimg.setPixel(2*col+1, 2*row+1, self.oldpixel)
-        self.write("_double")
+        self.write("_double", 0)
 
     def average(self):
         """Average
@@ -178,7 +189,7 @@ class ImageFilter(object):
                     red = [neighbors[i][0] for i in range(nlen)]
                     green = [neighbors[i][1] for i in range(nlen)]
                     blue = [neighbors[i][2] for i in range(nlen)]
-                    # Sort the lists so we 
+                    # Sort the lists so we can later find the median.
                     for i in [red, green, blue]:
                         i.sort()
                     # If the list has an odd number of items in it.
@@ -195,7 +206,5 @@ class ImageFilter(object):
 
 
 if __name__ == "__main__":
-    #~ img = Image("cy.png")
-    #~ img.double()
-    img2 = ImageFilter("cyd.png")
-    img2.median()
+    img = ImageFilter("example.png")
+    img.blackwhite()
