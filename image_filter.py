@@ -22,7 +22,7 @@
     
     TODO:
     1. Use colorsys to add HLS, HSV, YIQ compatibility and customization (satu-
-    ration, intensity, lightness)
+    ration, (r+g+b), lightness)
     2. Write testcases
     3. Add file type conversion
     4. Add command line arguments
@@ -36,6 +36,7 @@
 
 
 import cImage as image
+from math import sqrt
 from os.path import splitext
 
 class ImageFilter(object):
@@ -204,7 +205,66 @@ class ImageFilter(object):
                     self.newimg.setPixel(col,row,p)
         self.write("_median")
 
+    def sobel(self, draw=0):
+        "Using the Sobel Algorithm to apply Edge Detection to an image."
+        self.draw = draw
+        # Overwriting self.newimg because we need an empty canvas. Otherwise
+        # the existing pixels would influence the newly written ones.
+        self.newimg = image.EmptyImage(self.width, self.height)
+        if self.draw:
+            self.win = image.ImageWin(self.img_file, self.width*2, self.height*2)
+            
+        # Abandon all hope, ye who enter here. Terrible nested logic incoming.
+        for x in range(1, self.width-1):
+            for y in range(1, self.height-1):
+                # Apply the kx and ky gradient kernels to all pixels.
+                kx = ky = 0
+                for xx in range(x-1, x+2):
+                    for yy in range(y-1, y+2):
+                        # Extract RGB of the current neighbor pixel.
+                        p = self.oldimg.getPixel(xx, yy)
+                        r = p.getRed()
+                        g = p.getGreen()
+                        b = p.getBlue()
+
+                        # Left Row.
+                        if xx == x-1:
+                            if yy == y-1:
+                                kx -= (r+g+b)
+                                ky -= (r+g+b)
+                            elif yy == y:
+                                kx -= 2 * (r+g+b)
+                            elif yy == y+1:
+                                kx -= (r+g+b)
+                                ky += (r+g+b)
+                        # Middle Row.
+                        elif xx == x and yy == y-1:
+                            ky -= 2 * (r+g+b)
+                        elif xx == x and yy == y+1:
+                            ky += 2 * (r+g+b)
+                        # Right Row.
+                        elif xx == x+1:
+                            if yy == y-1:
+                                kx += (r+g+b)
+                                ky -= (r+g+b)
+                            elif yy == y:
+                                kx += 2 * (r+g+b)
+                            elif yy == y+1:
+                                kx += (r+g+b)
+                                ky += (r+g+b)
+                # Use Pythagoras' theorem to calc the relative length of kx, ky.
+                length = sqrt((kx**2) + (ky**2))
+                # Each pixels intensity can have 3*255=765 and the maximum is
+                # 4*765=3060. The final range is (sqrt(2*3060**2)=4328.
+                # Now we can normalize the length to the possible range:
+                length = int(length / 4328.0 * 255)
+
+                # Finally, apply the normalized length to each pixel.
+                p.red = p.green = p.blue = length
+                self.newimg.setPixel(x, y, p)
+        self.write("_sobel")
+
 
 if __name__ == "__main__":
-    img = ImageFilter("example.png")
-    img.blackwhite()
+    img = ImageFilter("cy.png")
+    img.removecolor()
