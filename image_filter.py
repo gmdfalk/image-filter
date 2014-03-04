@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-""" Image Processing with PIL and cImage
+""" Image Filter: Image Processing with PIL and cImage
 
     Originated from assignments in interactivepython.org (Iteration Chapter).
     Applies different filters/algorithms to an image file, displays the changes
@@ -94,9 +94,9 @@ class ImageFilter(object):
         # TODO: Add options for different colors.
         for col in range(self.width):
             for row in range(self.height):
-                p = newimg.getPixel(col,row)
+                p = self.newimg.getPixel(col,row)
                 p.red = 0
-                newimg.setPixel(col,row,p)
+                self.newimg.setPixel(col,row,p)
         self.write("_rc")
         
     def sepia(self):
