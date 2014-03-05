@@ -16,6 +16,7 @@ Image Processing with PIL (Pillow) and cImage.
     double - Doubles the size of the image.
     average - Smoothes out the image by averaging the 8 neighbors of a pixel.
     median - Same thing as average but using a median. Likely gives better results.
+    sobel - Outlines the edges in the picture white, everything else gets dark. Looks cool!
 
     Please note that this was a learning exercise. Do not use these filters with
     large images as the processing time is O(n) or worse.

@@ -16,6 +16,7 @@
     double - Doubles the size of the image.
     average - Smoothes out the image by averaging the 8 neighbors of a pixel.
     median - Same thing as average but using a median. Likely gives better results.
+    sobel - Outlines the edges in the picture white, everything else gets dark. Looks cool!
 
     Please note that this was a learning exercise. Do not use these filters with
     large images as the processing time is O(n) or worse.
@@ -30,8 +31,7 @@
     6. Use gaussian kernel for average() instead of averaging.
         Also source out the neighborhood stuff to a separate method.
     7. Make the write method optional.
-    8. Fix image drawing for double sized pictures.
-    9. Implement the skip_draw argument properly (per method, not instance).
+    8. Implement the skip_draw argument properly (per method, not instance).
 """
 
 
@@ -266,5 +266,5 @@ class ImageFilter(object):
 
 
 if __name__ == "__main__":
-    img = ImageFilter("cy.png")
-    img.removecolor()
+    img = ImageFilter("example.png", draw=0)
+    img.greyscale()
