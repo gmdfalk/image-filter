@@ -19,7 +19,7 @@
     sobel - Outlines the edges in the picture white, everything else gets dark. Looks cool!
 
     Please note that this was a learning exercise. Do not use these filters with
-    large images as the processing time is O(n) or worse.
+    large images as the execution time is O(n) or worse.
     
     TODO:
     1. Use colorsys to add HLS, HSV, YIQ compatibility and customization (satu-
@@ -32,6 +32,7 @@
         Also source out the neighborhood stuff to a separate method.
     7. Make the write method optional.
     8. Implement the skip_draw argument properly (per method, not instance).
+    9. Fix instance initialisation (make them reusable).
 """
 
 
@@ -66,59 +67,59 @@ class ImageFilter(object):
 
     def invert(self):
         "Invert the colors of the image"
-        for col in range(self.width):
-            for row in range(self.height):
-                pixel = self.newimg.getPixel(col,row)
-                pixel.red = 255 - pixel.red
-                pixel.green = 255 - pixel.green
-                pixel.blue = 255 - pixel.blue
-                self.newimg.setPixel(col,row,pixel)
+        for x in range(self.width):
+            for y in range(self.height):
+                p = self.newimg.getPixel(x,y)
+                p.red = 255 - p.red
+                p.green = 255 - p.green
+                p.blue = 255 - p.blue
+                self.newimg.setPixel(x,y,p)
         self.write("_inv")
 
     def greyscale(self):
         "Convert image to greyscale"        
-        for col in range(self.width):
-            for row in range(self.height):
-                pixel = self.newimg.getPixel(col,row)
-                avg = (pixel[0]+pixel[1]+pixel[2])/3
-                pixel.red = pixel.green = pixel.blue = avg
-                self.newimg.setPixel(col,row,pixel)
+        for x in range(self.width):
+            for y in range(self.height):
+                p = self.newimg.getPixel(x,y)
+                avg = (p[0]+p[1]+p[2])/3
+                p.red = p.green = p.blue = avg
+                self.newimg.setPixel(x,y,p)
         self.write("_grey")
 
     def blackwhite(self):
         "Convert image to black and white"
-        for col in range(self.width):
-            for row in range(self.height):
-                pixel = self.newimg.getPixel(col,row)
-                avg = (pixel[0]+pixel[1]+pixel[2])/3
+        for x in range(self.width):
+            for y in range(self.height):
+                p = self.newimg.getPixel(x,y)
+                avg = (p[0]+p[1]+p[2])/3
                 if avg >= 128:
                     avg = 255
                 else:
                     avg = 0
-                pixel.red = pixel.green = pixel.blue = avg
-                self.newimg.setPixel(col,row,pixel)
+                p.red = p.green = p.blue = avg
+                self.newimg.setPixel(x,y,p)
         self.write("_bw")
 
     def removecolor(self, color="R"):
         "Remove either (R)ed, (G)reen, (B)lue or a combination of those"
         # TODO: Add options for different colors.
-        for col in range(self.width):
-            for row in range(self.height):
-                p = self.newimg.getPixel(col,row)
+        for x in range(self.width):
+            for y in range(self.height):
+                p = self.newimg.getPixel(x,y)
                 p.red = 0
-                self.newimg.setPixel(col,row,p)
+                self.newimg.setPixel(x,y,p)
         self.write("_rc")
         
     def sepia(self):
         "Apply the sepia filter to the image"
-        for col in range(self.width):
-            for row in range(self.height):
+        for x in range(self.width):
+            for y in range(self.height):
                 try:
-                    p = self.newimg.getPixel(col,row)
+                    p = self.newimg.getPixel(x,y)
                     p.red = int(p.red * 0.393 + p.green * 0.769 + p.blue * 0.189)
                     p.green = int(p.red * 0.349 + p.green * 0.686 + p.blue * 0.168)
                     p.blue = int(p.red * 0.272 + p.green * 0.534 + p.blue * 0.131)
-                    self.newimg.setPixel(col,row,p)
+                    self.newimg.setPixel(x,y,p)
                 except:
                     continue
         self.write("_sepia")
@@ -130,13 +131,13 @@ class ImageFilter(object):
         if self.draw:
             self.win = image.ImageWin(self.img_file, self.width*2, self.height*2)
     
-        for row in range(self.height):
-            for col in range(self.width):    
-                self.oldpixel = self.oldimg.getPixel(col,row)
-                self.newimg.setPixel(2*col,2*row, self.oldpixel)
-                self.newimg.setPixel(2*col+1, 2*row, self.oldpixel)
-                self.newimg.setPixel(2*col, 2*row+1, self.oldpixel)
-                self.newimg.setPixel(2*col+1, 2*row+1, self.oldpixel)
+        for y in range(self.height):
+            for x in range(self.width):    
+                self.oldpixel = self.oldimg.getPixel(x,y)
+                self.newimg.setPixel(2*x,2*y, self.oldpixel)
+                self.newimg.setPixel(2*x+1, 2*y, self.oldpixel)
+                self.newimg.setPixel(2*x, 2*y+1, self.oldpixel)
+                self.newimg.setPixel(2*x+1, 2*y+1, self.oldpixel)
         self.write("_double", 0)
 
     def average(self):
@@ -145,14 +146,14 @@ class ImageFilter(object):
         Apply average of surrounding 8 pixels to the current pixel.
         This should probably be updated to use Gaussian instead."""
         
-        for row in range(self.height):
-            for col in range(self.width):    
-                p = self.newimg.getPixel(col, row)
+        for y in range(self.height):
+            for x in range(self.width):    
+                p = self.newimg.getPixel(x, y)
                 neighbors = []
-                for i in range(col-1, col+2):
-                    for j in range(row-1, row+2):
+                for xx in range(x-1, x+2):
+                    for yy in range(y-1, y+2):
                         try:
-                            neighbor = self.newimg.getPixel(i, j)
+                            neighbor = self.newimg.getPixel(xx, yy)
                             neighbors.append(neighbor)
                         except:
                             continue
@@ -165,7 +166,7 @@ class ImageFilter(object):
                     p.red = sum([neighbors[i][0] for i in range(nlen)])/nlen
                     p.green = sum([neighbors[i][1] for i in range(nlen)])/nlen
                     p.blue = sum([neighbors[i][2] for i in range(nlen)])/nlen
-                    self.newimg.setPixel(col,row,p)
+                    self.newimg.setPixel(x,y,p)
         self.write("_avg")
 
     def median(self):
@@ -173,14 +174,15 @@ class ImageFilter(object):
 
         Apply median of surrounding 8 pixels to current pixel
         This usually gives better results than average()"""
-        for row in range(self.height):
-            for col in range(self.width):
-                p = self.newimg.getPixel(col, row)
+        
+        for y in range(self.height):
+            for x in range(self.width):
+                p = self.newimg.getPixel(x, y)
                 neighbors = []
-                for i in range(col-1, col+2):
-                    for j in range(row-1, row+2):
+                for xx in range(x-1, x+2):
+                    for yy in range(y-1, y+2):
                         try:
-                            neighbor = self.newimg.getPixel(i, j)
+                            neighbor = self.newimg.getPixel(xx, yy)
                             neighbors.append(neighbor)
                         except:
                             continue
@@ -202,7 +204,7 @@ class ImageFilter(object):
                         p.red = (red[len(red)/2] + red[len(red)/2-1])/2
                         p.green = (green[len(green)/2] + green[len(green)/2-1])/2
                         p.blue = (blue[len(blue)/2] + blue[len(blue)/2-1])/2
-                    self.newimg.setPixel(col,row,p)
+                    self.newimg.setPixel(x,y,p)
         self.write("_median")
 
     def sobel(self, draw=0):
@@ -266,5 +268,5 @@ class ImageFilter(object):
 
 
 if __name__ == "__main__":
-    img = ImageFilter("example.png", draw=0)
-    img.greyscale()
+    img = ImageFilter("cy.png", draw=0)
+    img.sobel()

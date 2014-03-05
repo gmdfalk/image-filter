@@ -19,4 +19,4 @@ Image Processing with PIL (Pillow) and cImage.
     sobel - Outlines the edges in the picture white, everything else gets dark. Looks cool!
 
     Please note that this was a learning exercise. Do not use these filters with
-    large images as the processing time is O(n) or worse.
+    large images as the execution time is O(n) or worse.
