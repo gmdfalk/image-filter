@@ -33,6 +33,8 @@
     7. Make the write method optional.
     8. Implement the skip_draw argument properly (per method, not instance).
     9. Fix instance initialisation (make them reusable).
+    10. Use empty canvases for everything, skip .copy() for self.newimg.
+    11. Empty or 300 lines :o)
 """
 
 
@@ -49,14 +51,17 @@ class ImageFilter(object):
         self.width = self.oldimg.getWidth()
         self.height = self.oldimg.getHeight()
         self.newimg = self.oldimg.copy()
+        # Decides whether to skip drawing the image in a popup window.
         self.draw = draw
         if self.draw:
             self.win = image.ImageWin(self.img_file, self.width, self.height)
 
     def write(self, func_name="_", draw=1):
         "Draw and save a processed image"
+        # Get file's root and extension from method strip_name().
         img_name, img_ext = self.strip_name()
         self.newimg.save(img_name+func_name+img_ext)
+        # Again, only execute this if we want to have a popup of the window.
         if self.draw:
             self.newimg.draw(self.win)
             self.win.exitonclick()
@@ -69,17 +74,21 @@ class ImageFilter(object):
         "Invert the colors of the image"
         for x in range(self.width):
             for y in range(self.height):
+                # For each pixel p, get the RGB values and invert them.
                 p = self.newimg.getPixel(x,y)
                 p.red = 255 - p.red
                 p.green = 255 - p.green
                 p.blue = 255 - p.blue
+                # Write the modified pixel into our cloned window.
                 self.newimg.setPixel(x,y,p)
+        # Call the method that draws, writes and decides the filename.
         self.write("_inv")
 
     def greyscale(self):
         "Convert image to greyscale"        
         for x in range(self.width):
             for y in range(self.height):
+                # For each pixel p get the RBG values and average them out.
                 p = self.newimg.getPixel(x,y)
                 avg = (p[0]+p[1]+p[2])/3
                 p.red = p.green = p.blue = avg
@@ -90,6 +99,8 @@ class ImageFilter(object):
         "Convert image to black and white"
         for x in range(self.width):
             for y in range(self.height):
+                # Any pixel with an average r+g+b of >= 128 gets converted to
+                # white (255), all others to black (0).
                 p = self.newimg.getPixel(x,y)
                 avg = (p[0]+p[1]+p[2])/3
                 if avg >= 128:
@@ -111,10 +122,11 @@ class ImageFilter(object):
         self.write("_rc")
         
     def sepia(self):
-        "Apply the sepia filter to the image"
+        "Apply Sepia Toning to the image"
         for x in range(self.width):
             for y in range(self.height):
                 try:
+                    # Apply the Sepia filter to each value r, g, b of pixel p.
                     p = self.newimg.getPixel(x,y)
                     p.red = int(p.red * 0.393 + p.green * 0.769 + p.blue * 0.189)
                     p.green = int(p.red * 0.349 + p.green * 0.686 + p.blue * 0.168)
@@ -126,18 +138,21 @@ class ImageFilter(object):
 
     def double(self, draw=0):
         "Double the size of the image"
+        # The canvas size gets annoyingly big so by default we avoid drawing here.
         self.draw = draw
+        # We overwrite self.newimg because we need double the canvas size.
         self.newimg = image.EmptyImage(self.width*2, self.height*2)
+        # In case we do decide to draw, self.win needs double canvas, too.
         if self.draw:
             self.win = image.ImageWin(self.img_file, self.width*2, self.height*2)
     
         for y in range(self.height):
-            for x in range(self.width):    
-                self.oldpixel = self.oldimg.getPixel(x,y)
-                self.newimg.setPixel(2*x,2*y, self.oldpixel)
-                self.newimg.setPixel(2*x+1, 2*y, self.oldpixel)
-                self.newimg.setPixel(2*x, 2*y+1, self.oldpixel)
-                self.newimg.setPixel(2*x+1, 2*y+1, self.oldpixel)
+            for x in range(self.width):
+                p = self.oldimg.getPixel(x,y)
+                self.newimg.setPixel(2*x,2*y, p)
+                self.newimg.setPixel(2*x+1, 2*y, p)
+                self.newimg.setPixel(2*x, 2*y+1, p)
+                self.newimg.setPixel(2*x+1, 2*y+1, p)
         self.write("_double", 0)
 
     def average(self):
@@ -147,9 +162,12 @@ class ImageFilter(object):
         This should probably be updated to use Gaussian instead."""
         
         for y in range(self.height):
-            for x in range(self.width):    
+            for x in range(self.width):
+                # Initialize both pixel p and the list to store neighbor pixels in.
                 p = self.newimg.getPixel(x, y)
                 neighbors = []
+                # Nested for loop to check 9 pixels total: p plus it's 8 neighbors.
+                # Use list comprehension here? Also get rid of try statements.
                 for xx in range(x-1, x+2):
                     for yy in range(y-1, y+2):
                         try:
@@ -163,6 +181,7 @@ class ImageFilter(object):
                 # Uncommented, the following line would leave most of the white 
                 # untouched which works a little better for real photographs, imo.
                 #~ if nlen and p[0]+p[1]+p[2] < 690:
+                    # Get the average of each r, g, b for all pixels in neighbors.
                     p.red = sum([neighbors[i][0] for i in range(nlen)])/nlen
                     p.green = sum([neighbors[i][1] for i in range(nlen)])/nlen
                     p.blue = sum([neighbors[i][2] for i in range(nlen)])/nlen
@@ -177,8 +196,11 @@ class ImageFilter(object):
         
         for y in range(self.height):
             for x in range(self.width):
+                # Initialize both pixel p and the list to store neighbor pixels in.
                 p = self.newimg.getPixel(x, y)
                 neighbors = []
+                # Nested for loop to check 9 pixels total: p plus it's 8 neighbors.
+                # Use list comprehension here? Also get rid of try statements.
                 for xx in range(x-1, x+2):
                     for yy in range(y-1, y+2):
                         try:
@@ -195,11 +217,12 @@ class ImageFilter(object):
                     # Sort the lists so we can later find the median.
                     for i in [red, green, blue]:
                         i.sort()
-                    # If the list has an odd number of items in it.
+                    # If the list has an odd number of items in it, the median is easy.
                     if nlen % 2:
                         p.red = red[len(red)/2]
                         p.green = green[len(green)/2]
                         p.blue = blue[len(blue)/2]
+                    # The median calculation if the list length is even:
                     else:
                         p.red = (red[len(red)/2] + red[len(red)/2-1])/2
                         p.green = (green[len(green)/2] + green[len(green)/2-1])/2
@@ -221,6 +244,8 @@ class ImageFilter(object):
             for y in range(1, self.height-1):
                 # Apply the kx and ky gradient kernels to all pixels.
                 kx = ky = 0
+                # Nested for loop to check 9 pixels total: p plus it's 8 neighbors.
+                # Use list comprehension here? Also get rid of try statements.
                 for xx in range(x-1, x+2):
                     for yy in range(y-1, y+2):
                         # Extract RGB of the current neighbor pixel.
@@ -229,6 +254,7 @@ class ImageFilter(object):
                         g = p.getGreen()
                         b = p.getBlue()
 
+                        ## The actual Sobel algorithm:
                         # Left Row.
                         if xx == x-1:
                             if yy == y-1:
@@ -254,9 +280,9 @@ class ImageFilter(object):
                             elif yy == y+1:
                                 kx += (r+g+b)
                                 ky += (r+g+b)
-                # Use Pythagoras' theorem to calc the relative length of kx, ky.
+                # Use Pythagoras' theorem to calc the relative length of kx & ky.
                 length = sqrt((kx**2) + (ky**2))
-                # Each pixels intensity can have 3*255=765 and the maximum is
+                # Each pixels r+g+b can have 3*255=765 and for +/-4 the maximum is
                 # 4*765=3060. The final range is (sqrt(2*3060**2)=4328.
                 # Now we can normalize the length to the possible range:
                 length = int(length / 4328.0 * 255)
@@ -268,5 +294,6 @@ class ImageFilter(object):
 
 
 if __name__ == "__main__":
-    img = ImageFilter("cy.png", draw=0)
+    # Leave out the "draw=0" to produce a popup of the image once it's complete.
+    img = ImageFilter("example.png", draw=0)
     img.sobel()
