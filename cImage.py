@@ -100,7 +100,7 @@ class ImageWin(tk.Canvas):
         the click"""
         self.mouseX = None
         self.mouseY = None
-        while self.mouseX == None or self.mouseY == None:
+        while self.mouseX is None or self.mouseY is None:
             self.update()
         return ((self.mouseX,self.mouseY))
 
@@ -356,7 +356,7 @@ class AbstractImage(object):
         _imroot.update()
 
     def saveTk(self,fname=None,ftype='gif'):
-        if fname == None:
+        if fname is None:
             fname = self.imFileName
         sufstart = fname.rfind('.')
         if sufstart < 0:
@@ -374,7 +374,7 @@ class AbstractImage(object):
             print("Error saving, Could Not open ", fname, " to write.")
 
     def savePIL(self,fname=None,ftype='jpg'):
-        if fname == None:
+        if fname is None:
             fname = self.imFileName
         sufstart = fname.rfind('.')
         if sufstart < 0:
@@ -420,7 +420,7 @@ class ListImage(AbstractImage):
 # Example program  Read in an image and calulate the negative.
 if __name__ == '__main__':
     win = ImageWin("My Window",480,640)
-    oImage = FileImage('lcastle.jpg')
+    oImage = FileImage('example.png')
     print(oImage.getWidth(), oImage.getHeight())
     oImage.draw(win)
     myImage = oImage.copy()
@@ -436,8 +436,6 @@ if __name__ == '__main__':
     myImage.setPosition(myImage.getWidth()+1,0)
     myImage.draw(win)
     print(win.getMouse())
-    myImage.save('/Users/bmiller/tmp/testfoo.jpg')
-    print(myImage.toList())
+    myImage.save('testfoo.png')
+    #~ print(myImage.toList())
     win.exitOnClick()
-
-
